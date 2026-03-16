@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>專屬金鵝島冒險 - V8.1 完美開場版</title>
+<title>專屬金鵝島冒險 - V8.2 界面修復版</title>
 <style>
   body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -25,7 +25,7 @@
   /* 地圖進度條縮小化 */
   .map-progress {
     background: rgba(0, 0, 0, 0.6); padding: 8px 15px; border-radius: 30px;
-    margin-bottom: 15px; color: #9ca3af; font-weight: bold; font-size: 0.9em;
+    margin-bottom: 20px; color: #9ca3af; font-weight: bold; font-size: 0.9em;
     display: flex; gap: 8px; z-index: 10;
   }
   .map-progress span { padding: 4px 8px; border-radius: 15px; transition: all 0.3s; }
@@ -39,6 +39,22 @@
     color: white; text-align: center; position: relative; z-index: 10;
   }
 
+  /* 🔥 介面修復：獨立的島嶼控制台 🔥 */
+  .control-panel {
+    max-width: 600px; width: 100%; margin-top: 15px; z-index: 10;
+    display: flex; justify-content: space-between; gap: 10px;
+  }
+  .btn-small {
+    flex: 1; padding: 12px; border-radius: 15px; border: none;
+    color: #333; font-weight: bold; cursor: pointer; text-align: center;
+    background: rgba(255, 255, 255, 0.85); box-shadow: 0 4px 0 rgba(0,0,0,0.15);
+    transition: all 0.1s; font-size: 1em; text-shadow: none;
+  }
+  .btn-small:hover { filter: brightness(1.1); }
+  .btn-small:active { transform: translateY(4px); box-shadow: 0 0 0 rgba(0,0,0,0.15); }
+  /* 特別突出存摺按鈕 */
+  .btn-small.log { background-color: #10b981; color: white; box-shadow: 0 4px 0 #047857; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
+
   .hidden { display: none !important; }
   h1 { font-size: 2.2em; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); margin-bottom: 15px; margin-top: 0; }
   
@@ -51,22 +67,18 @@
   
   /* 遊戲大按鈕風格 */
   .btn-group { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
-  button, .btn-label {
+  button:not(.btn-small), .btn-label {
     padding: 15px 20px; font-size: 1.4em; border-radius: 20px; border: none;
     color: white; font-weight: 900; cursor: pointer; box-shadow: 0 6px 0 rgba(0,0,0,0.2); 
     transition: all 0.1s; display: inline-block; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
   }
-  button:active, .btn-label:active { transform: translateY(6px); box-shadow: 0 0 0 rgba(0,0,0,0.2); }
+  button:not(.btn-small):active, .btn-label:active { transform: translateY(6px); box-shadow: 0 0 0 rgba(0,0,0,0.2); }
   
   .btn-passion { background-color: #ec4899; box-shadow: 0 6px 0 #be185d; width: 45%; }
   .btn-random { background-color: #9333ea; box-shadow: 0 6px 0 #6b21a8; width: 95%; margin-top: 5px;} 
   .btn-action { background-color: #f59e0b; box-shadow: 0 6px 0 #b45309; font-size: 1.6em; width: 100%;}
   .btn-upload { background-color: #8b5cf6; box-shadow: 0 6px 0 #5b21b6; font-size: 1.6em; width: 100%;}
   .btn-home { background-color: #10b981; box-shadow: 0 6px 0 #047857; font-size: 1.6em; width: 100%; }
-
-  /* 頂部小按鈕 */
-  .top-tools { position: absolute; top: -50px; right: 0; display: flex; gap: 10px; }
-  .btn-small { background: rgba(255,255,255,0.8); color: #333; font-size: 1em; padding: 8px 12px; border-radius: 12px; font-weight: bold; border: none; box-shadow: 0 3px 0 rgba(0,0,0,0.2); cursor: pointer;}
   
   /* 預覽區與罐子 */
   #previewContainer { margin: 15px auto; max-width: 250px; border-radius: 15px; overflow: hidden; border: 4px dashed #fde047; display: none; }
@@ -130,12 +142,6 @@
   </div>
 
   <div class="container">
-    <div class="top-tools">
-      <button class="btn-small" onclick="replayIntro()">🎬 故事</button>
-      <button class="btn-small" onclick="openSettings()">⚙️ 設定</button>
-      <button class="btn-small" style="background:#10b981; color:white;" onclick="openLog()">📜 存摺</button>
-    </div>
-    
     <div id="step1">
       <p class="dialogue">🐶 <span class="child-name-display" style="color:#d97706;"></span>，選一個任務出擊吧！</p>
       <div class="btn-group">
@@ -148,17 +154,12 @@
     </div>
 
     <div id="step2" class="hidden">
-      <button class="btn-small" style="position: absolute; top: -45px; left: 0;" onclick="goBack('step2', 'step1', 1)">⬅️ 換任務</button>
+      <button class="btn-small" style="background:#eee; box-shadow:0 3px 0 #9ca3af; color:#333; margin-top:-10px; margin-bottom:10px; text-shadow:none; padding:8px 15px; border-radius:12px;" onclick="goBack('step2', 'step1', 1)">⬅️ 換個任務</button>
       <p class="dialogue" id="taskDialogue">🎯 任務：<br><span id="taskNameDisplay" style="color:#e11d48; font-size: 1.2em;"></span><br>快去解決，然後拍照！</p>
-      
       <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden" onchange="previewImage(event)">
       <label for="cameraInput" class="btn-label btn-upload" id="uploadBtn">📸 點我拍照掃描</label>
-      
       <div id="previewContainer"><img id="imagePreview" src=""></div>
-      
-      <div style="margin-top: 15px;">
-        <button id="claimBtn" class="btn-action hidden" onclick="goToStep3()">✨ 掃描成功！領能量</button>
-      </div>
+      <div style="margin-top: 15px;"><button id="claimBtn" class="btn-action hidden" onclick="goToStep3()">✨ 掃描成功！領能量</button></div>
     </div>
 
     <div id="step3" class="hidden">
@@ -169,28 +170,20 @@
 
     <div id="step4" class="hidden">
       <p class="dialogue" id="allocateDialogue">⚖️ 把能量存進專屬帳戶吧！</p>
-      
       <button id="allocateBtn" class="btn-action" onclick="allocateCoins()">✨ 自動存入金鵝島 ✨</button>
       <button id="homeBtn" class="btn-home hidden" onclick="returnToHome()">🏠 完成！回首頁</button>
-      
       <div class="jars">
-        <div class="jar jar-goose">
-          <div class="emoji-large">🦆</div>
-          <h3 id="jar1TitleDisplay">金鵝(50%)</h3>
-          <h2 id="gooseCoins">0</h2>
-        </div>
-        <div class="jar jar-dream">
-          <div class="emoji-large">🚀</div>
-          <h3 id="jar2TitleDisplay">夢想(40%)</h3>
-          <h2 id="dreamCoins">0</h2>
-        </div>
-        <div class="jar jar-spending">
-          <div class="emoji-large">🍬</div>
-          <h3 id="jar3TitleDisplay">零用(10%)</h3>
-          <h2 id="spendingCoins">0</h2>
-        </div>
+        <div class="jar jar-goose"><div class="emoji-large">🦆</div><h3>金鵝(50%)</h3><h2 id="gooseCoins">0</h2></div>
+        <div class="jar jar-dream"><div class="emoji-large">🚀</div><h3>夢想(40%)</h3><h2 id="dreamCoins">0</h2></div>
+        <div class="jar jar-spending"><div class="emoji-large">🍬</div><h3>零用(10%)</h3><h2 id="spendingCoins">0</h2></div>
       </div>
     </div>
+  </div>
+
+  <div class="control-panel">
+    <button class="btn-small" onclick="replayIntro()">🎬 故事</button>
+    <button class="btn-small" onclick="openSettings()">⚙️ 設定</button>
+    <button class="btn-small log" onclick="openLog()">📜 存摺</button>
   </div>
 
   <div id="settingsModal" class="modal-overlay hidden" style="z-index: 150;">
@@ -200,7 +193,7 @@
       <div class="setting-group"><label>🦆 50% 養鵝帳戶</label><input type="text" id="inputJar1" placeholder="例如：金鵝核心"></div>
       <div class="setting-group"><label>🚀 40% 夢想帳戶</label><input type="text" id="inputJar2" placeholder="例如：買樂高"></div>
       <div class="setting-group"><label>🍬 10% 零用錢帳戶</label><input type="text" id="inputJar3" placeholder="例如：買糖果"></div>
-      <button class="btn-action" style="margin-top: 15px;" onclick="saveSettings()">💾 儲存出發</button>
+      <button class="btn-action" style="margin-top: 15px; box-shadow:0 6px 0 #1d4ed8; background:#3b82f6;" onclick="saveSettings()">💾 儲存出發</button>
     </div>
   </div>
 
@@ -216,8 +209,8 @@
   </div>
 
   <script>
-    // 為了讓妳測試順利，換了一個新的本地記憶體密碼
-    let gameData = JSON.parse(localStorage.getItem('customIslandData_v4')) || {
+    // 使用新的 Key 確保測試乾淨
+    let gameData = JSON.parse(localStorage.getItem('customIslandData_v8.2')) || {
       childName: "", jar1Name: "金鵝", jar2Name: "夢想", jar3Name: "零用",
       goose: 0, dream: 0, spending: 0, history: []
     };
@@ -228,38 +221,24 @@
     ];
 
     window.onload = function() {
-      // 1. 如果沒名字，打開電影院
       if (!gameData.childName) { 
         document.getElementById('introModal').classList.remove('hidden'); 
         let video = document.getElementById('introVideo');
-        
-        // 嘗試自動播放
-        video.play().catch(e => {
-          console.log("瀏覽器阻擋自動播放，需要樂樂親手點擊播放鍵！");
-        });
-
-        // 2. 影片播完時，自動跳轉去設定名字！
-        video.onended = function() {
-          finishIntro();
-        };
+        video.play().catch(e => { console.log("需點擊播放"); });
+        video.onended = function() { finishIntro(); };
       } 
-      else { 
-        // 已經有名字了，直接進入首頁
-        applySettingsToUI(); updateHUD(); 
-      }
+      else { applySettingsToUI(); updateHUD(); }
     };
 
     function finishIntro() {
       document.getElementById('introModal').classList.add('hidden');
       document.getElementById('introVideo').pause();
-      // 跳轉設定
       if (!gameData.childName) openSettings();
     }
 
     function replayIntro() {
       document.getElementById('introModal').classList.remove('hidden');
-      document.getElementById('introVideo').currentTime = 0; 
-      document.getElementById('introVideo').play();
+      document.getElementById('introVideo').currentTime = 0; document.getElementById('introVideo').play();
     }
 
     function updateHUD() {
@@ -282,7 +261,7 @@
       gameData.jar1Name = document.getElementById('inputJar1').value.trim() || "金鵝";
       gameData.jar2Name = document.getElementById('inputJar2').value.trim() || "夢想";
       gameData.jar3Name = document.getElementById('inputJar3').value.trim() || "零用";
-      localStorage.setItem('customIslandData_v4', JSON.stringify(gameData));
+      localStorage.setItem('customIslandData_v8.2', JSON.stringify(gameData));
       document.getElementById('settingsModal').classList.add('hidden');
       applySettingsToUI(); updateHUD();
     }
@@ -343,7 +322,7 @@
       document.getElementById('step3').classList.remove('hidden');
       document.getElementById('rewardAmount').innerText = currentReward;
       let audio = new Audio('https://actions.google.com/sounds/v1/foley/glass_clink.ogg');
-      audio.play().catch(e=>console.log("Audio muted"));
+      audio.play().catch(e=>console.log("Muted"));
       updateMap(3);
     }
 
@@ -363,22 +342,18 @@
       document.getElementById('allocateBtn').classList.add('hidden');
       document.getElementById('homeBtn').classList.remove('hidden');
       document.getElementById('allocateDialogue').innerText = "🎉 存入成功！";
-      
-      let gooseShare = Math.floor(currentReward * 0.5);
-      let dreamShare = Math.floor(currentReward * 0.4);
-      let spendingShare = currentReward - gooseShare - dreamShare;
-      
-      gameData.goose += gooseShare; gameData.dream += dreamShare; gameData.spending += spendingShare;
+      let g = Math.floor(currentReward * 0.5);
+      let d = Math.floor(currentReward * 0.4);
+      let s = currentReward - g - d;
+      gameData.goose += g; gameData.dream += d; gameData.spending += s;
       let time = new Date().toLocaleTimeString('zh-TW', {hour: '2-digit', minute:'2-digit'});
       gameData.history.unshift({ date: time, task: currentTaskName, reward: currentReward });
-      localStorage.setItem('customIslandData_v4', JSON.stringify(gameData));
-      
+      localStorage.setItem('customIslandData_v8.2', JSON.stringify(gameData));
       document.getElementById('gooseCoins').innerText = gameData.goose;
       document.getElementById('dreamCoins').innerText = gameData.dream;
       document.getElementById('spendingCoins').innerText = gameData.spending;
       updateHUD();
-      let audio = new Audio('https://actions.google.com/sounds/v1/foley/cash_register.ogg');
-      audio.play().catch(e=>console.log("Audio muted"));
+      new Audio('https://actions.google.com/sounds/v1/foley/cash_register.ogg').play().catch(e=>{});
     }
 
     function returnToHome() {
@@ -390,15 +365,11 @@
     function openLog() {
       document.getElementById('logModal').classList.remove('hidden');
       document.getElementById('modalTotal').innerText = gameData.goose + gameData.dream + gameData.spending;
-      let logList = document.getElementById('logList');
-      logList.innerHTML = ""; 
-      if(gameData.history.length === 0) {
-        logList.innerHTML = "<p style='text-align:center;'>還沒有紀錄喔！</p>"; return;
-      }
+      let logList = document.getElementById('logList'); logList.innerHTML = ""; 
+      if(gameData.history.length === 0) { logList.innerHTML = "<p>還沒有紀錄喔！</p>"; return; }
       gameData.history.forEach(item => {
-        let logItem = document.createElement('div');
-        logItem.className = "log-item";
-        logItem.innerHTML = `<div><span style="color:#666; font-size:0.8em;">${item.date}</span><br><span class="log-task">${item.task}</span></div><div class="log-reward">+${item.reward}</div>`;
+        let logItem = document.createElement('div'); logItem.className = "log-item";
+        logItem.innerHTML = `<div><span>${item.date}</span><br><span class="log-task">${item.task}</span></div><div class="log-reward">+${item.reward}</div>`;
         logList.appendChild(logItem);
       });
     }
