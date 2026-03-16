@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>專屬金鵝島冒險 - V8.1 完美開場版</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0; padding: 10px; display: flex; flex-direction: column;
+    justify-content: flex-start; align-items: center; min-height: 100vh;
+    background-image: url('bg1.jpg'); background-size: cover;
+    background-position: center; background-attachment: fixed;
+    transition: background-image 0.5s ease-in-out;
+  }
+
+  /* 頂部極簡儀表板 */
+  .hud-bar {
+    background: rgba(255, 255, 255, 0.95); padding: 10px 20px; border-radius: 30px;
+    margin-top: 10px; margin-bottom: 15px; color: #1f2937; font-weight: black; font-size: 1.2em;
+    display: flex; gap: 15px; border: 4px solid #fde047; box-shadow: 0 5px 15px rgba(0,0,0,0.3); z-index: 10;
+  }
+  .hud-total { color: #d97706; font-size: 1.4em; }
+
+  /* 地圖進度條縮小化 */
+  .map-progress {
+    background: rgba(0, 0, 0, 0.6); padding: 8px 15px; border-radius: 30px;
+    margin-bottom: 15px; color: #9ca3af; font-weight: bold; font-size: 0.9em;
+    display: flex; gap: 8px; z-index: 10;
+  }
+  .map-progress span { padding: 4px 8px; border-radius: 15px; transition: all 0.3s; }
+  .map-progress span.active { background: #fde047; color: #854d0e; transform: scale(1.1); }
+
+  /* 主視窗極簡化 */
+  .container {
+    max-width: 600px; width: 100%; background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px); padding: 30px 20px; border-radius: 25px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.2);
+    color: white; text-align: center; position: relative; z-index: 10;
+  }
+
+  .hidden { display: none !important; }
+  h1 { font-size: 2.2em; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); margin-bottom: 15px; margin-top: 0; }
+  
+  /* 胖胖的對話框 */
+  p.dialogue { 
+    font-size: 1.5em; background: rgba(255,255,255,0.95); color: #111; 
+    padding: 15px; border-radius: 20px; border-bottom: 6px solid #e5e7eb; 
+    margin-bottom: 25px; font-weight: 900; line-height: 1.3; 
+  }
+  
+  /* 遊戲大按鈕風格 */
+  .btn-group { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+  button, .btn-label {
+    padding: 15px 20px; font-size: 1.4em; border-radius: 20px; border: none;
+    color: white; font-weight: 900; cursor: pointer; box-shadow: 0 6px 0 rgba(0,0,0,0.2); 
+    transition: all 0.1s; display: inline-block; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+  }
+  button:active, .btn-label:active { transform: translateY(6px); box-shadow: 0 0 0 rgba(0,0,0,0.2); }
+  
+  .btn-passion { background-color: #ec4899; box-shadow: 0 6px 0 #be185d; width: 45%; }
+  .btn-random { background-color: #9333ea; box-shadow: 0 6px 0 #6b21a8; width: 95%; margin-top: 5px;} 
+  .btn-action { background-color: #f59e0b; box-shadow: 0 6px 0 #b45309; font-size: 1.6em; width: 100%;}
+  .btn-upload { background-color: #8b5cf6; box-shadow: 0 6px 0 #5b21b6; font-size: 1.6em; width: 100%;}
+  .btn-home { background-color: #10b981; box-shadow: 0 6px 0 #047857; font-size: 1.6em; width: 100%; }
+
+  /* 頂部小按鈕 */
+  .top-tools { position: absolute; top: -50px; right: 0; display: flex; gap: 10px; }
+  .btn-small { background: rgba(255,255,255,0.8); color: #333; font-size: 1em; padding: 8px 12px; border-radius: 12px; font-weight: bold; border: none; box-shadow: 0 3px 0 rgba(0,0,0,0.2); cursor: pointer;}
+  
+  /* 預覽區與罐子 */
+  #previewContainer { margin: 15px auto; max-width: 250px; border-radius: 15px; overflow: hidden; border: 4px dashed #fde047; display: none; }
+  #previewContainer img { width: 100%; display: block; }
+  
+  .jars { display: flex; justify-content: space-between; gap: 10px; margin-top: 20px;}
+  .jar { flex: 1; background: rgba(0, 0, 0, 0.6); border: 4px solid; border-radius: 15px; padding: 15px 5px; box-shadow: 0 5px 15px rgba(0,0,0,0.5);}
+  .jar-goose { border-color: #fde047; } .jar-dream { border-color: #67e8f9; } .jar-spending { border-color: #fb923c; }
+  .jar h3 { font-size: 0.9em; margin-bottom: 5px; text-shadow: 1px 1px 2px black;}
+  .jar h2 { font-size: 2.2em; margin: 0; color: #fff; text-shadow: 2px 2px 4px black;}
+  .emoji-large { font-size: 35px; margin-bottom: 5px; }
+
+  /* 彈出視窗 Modal */
+  .modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.9); z-index: 100; display: flex; flex-direction: column;
+    justify-content: center; align-items: center; backdrop-filter: blur(8px);
+  }
+  .modal-content {
+    background: white; color: #333; width: 90%; max-width: 500px;
+    border-radius: 25px; padding: 25px; max-height: 85vh; overflow-y: auto;
+    box-shadow: 0 0 30px #fde047; border: 5px solid #fde047;
+  }
+  .video-container { width: 100%; max-width: 800px; text-align: center; display: flex; flex-direction: column; align-items: center;}
+  .video-container video { width: 95%; border: 6px solid #fde047; border-radius: 20px; margin-bottom: 20px;}
+  .video-title { color: white; font-size: 2.5em; margin-bottom: 15px; text-shadow: 2px 2px 10px rgba(0,0,0,0.8); }
+
+  /* 設定與存摺選單極簡化 */
+  .setting-group { margin-bottom: 15px; text-align: left; }
+  .setting-group label { display: block; font-weight: bold; margin-bottom: 5px; color: #4b5563; font-size: 0.9em;}
+  .setting-group input { width: 100%; padding: 10px; border: 2px solid #d1d5db; border-radius: 10px; font-size: 1.1em; font-weight: bold; text-align: center;}
+  
+  .log-item { background: #f3f4f6; margin-bottom: 10px; padding: 12px; border-radius: 12px; border-left: 5px solid #10b981; display: flex; justify-content: space-between; align-items: center; text-align: left;}
+  .log-task { font-weight: 900; font-size: 1.1em; }
+  .log-reward { font-weight: 900; color: #f59e0b; font-size: 1.2em; }
+</style>
+</head>
+<body>
+
+  <div id="introModal" class="modal-overlay hidden" style="z-index: 200;">
+    <div class="video-container">
+      <h1 class="video-title">🎬 金鵝島傳說</h1>
+      <video id="introVideo" controls autoplay playsinline poster="bg1.jpg">
+        <source src="intro.mp4" type="video/mp4">
+      </video>
+      <button class="btn-action" style="margin-top: 10px; background-color: #6b7280; box-shadow: 0 6px 0 #4b5563;" onclick="finishIntro()">⏩ 略過動畫，開始設定</button>
+      <p style="color: #aaa; font-size: 0.9em; margin-top: 15px;">(若影片沒有自動播放，請點擊畫面中的播放鍵喔！)</p>
+    </div>
+  </div>
+
+  <div class="hud-bar" id="hudBar">
+    <div>👑 <span class="child-name-display"></span></div>
+    <div>💰 <span class="hud-total" id="hudTotalDisplay">0</span> 🪙</div>
+  </div>
+
+  <div class="map-progress" id="mapNav">
+    <span id="nav1" class="active">1. 任務</span> ➔
+    <span id="nav2">2. 拍照</span> ➔
+    <span id="nav3">3. 能量</span> ➔
+    <span id="nav4">4. 分配</span>
+  </div>
+
+  <div class="container">
+    <div class="top-tools">
+      <button class="btn-small" onclick="replayIntro()">🎬 故事</button>
+      <button class="btn-small" onclick="openSettings()">⚙️ 設定</button>
+      <button class="btn-small" style="background:#10b981; color:white;" onclick="openLog()">📜 存摺</button>
+    </div>
+    
+    <div id="step1">
+      <p class="dialogue">🐶 <span class="child-name-display" style="color:#d97706;"></span>，選一個任務出擊吧！</p>
+      <div class="btn-group">
+        <button class="btn-passion" onclick="goToStep2('收玩具', 50)">🧹 收玩具 (+50🪙)</button>
+        <button class="btn-passion" onclick="goToStep2('幫倒水', 40)">💧 幫倒水 (+40🪙)</button>
+        <button class="btn-passion" onclick="goToStep2('洗碗盤', 60)">🍽️ 洗碗盤 (+60🪙)</button>
+        <button class="btn-passion" onclick="goToStep2('擦桌子', 40)">🧽 擦桌子 (+40🪙)</button>
+        <button class="btn-random" onclick="randomTask()">🎲 神秘箱抽任務！</button>
+      </div>
+    </div>
+
+    <div id="step2" class="hidden">
+      <button class="btn-small" style="position: absolute; top: -45px; left: 0;" onclick="goBack('step2', 'step1', 1)">⬅️ 換任務</button>
+      <p class="dialogue" id="taskDialogue">🎯 任務：<br><span id="taskNameDisplay" style="color:#e11d48; font-size: 1.2em;"></span><br>快去解決，然後拍照！</p>
+      
+      <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden" onchange="previewImage(event)">
+      <label for="cameraInput" class="btn-label btn-upload" id="uploadBtn">📸 點我拍照掃描</label>
+      
+      <div id="previewContainer"><img id="imagePreview" src=""></div>
+      
+      <div style="margin-top: 15px;">
+        <button id="claimBtn" class="btn-action hidden" onclick="goToStep3()">✨ 掃描成功！領能量</button>
+      </div>
+    </div>
+
+    <div id="step3" class="hidden">
+      <p class="dialogue">🎉 太神啦！獲得能量！</p>
+      <h1 style="font-size: 5em; margin: 20px 0; color: #fde047; text-shadow: 0 0 30px #ca8a04;">+<span id="rewardAmount">0</span>🪙</h1>
+      <button class="btn-action" style="background-color: #3b82f6; box-shadow: 0 6px 0 #1d4ed8;" onclick="goToStep4()">➡️ 去分配能量</button>
+    </div>
+
+    <div id="step4" class="hidden">
+      <p class="dialogue" id="allocateDialogue">⚖️ 把能量存進專屬帳戶吧！</p>
+      
+      <button id="allocateBtn" class="btn-action" onclick="allocateCoins()">✨ 自動存入金鵝島 ✨</button>
+      <button id="homeBtn" class="btn-home hidden" onclick="returnToHome()">🏠 完成！回首頁</button>
+      
+      <div class="jars">
+        <div class="jar jar-goose">
+          <div class="emoji-large">🦆</div>
+          <h3 id="jar1TitleDisplay">金鵝(50%)</h3>
+          <h2 id="gooseCoins">0</h2>
+        </div>
+        <div class="jar jar-dream">
+          <div class="emoji-large">🚀</div>
+          <h3 id="jar2TitleDisplay">夢想(40%)</h3>
+          <h2 id="dreamCoins">0</h2>
+        </div>
+        <div class="jar jar-spending">
+          <div class="emoji-large">🍬</div>
+          <h3 id="jar3TitleDisplay">零用(10%)</h3>
+          <h2 id="spendingCoins">0</h2>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="settingsModal" class="modal-overlay hidden" style="z-index: 150;">
+    <div class="modal-content">
+      <h2 style="margin-bottom: 20px;">🛠️ 島嶼設定</h2>
+      <div class="setting-group"><label>👑 島主姓名</label><input type="text" id="inputChildName" placeholder="例如：樂樂"></div>
+      <div class="setting-group"><label>🦆 50% 養鵝帳戶</label><input type="text" id="inputJar1" placeholder="例如：金鵝核心"></div>
+      <div class="setting-group"><label>🚀 40% 夢想帳戶</label><input type="text" id="inputJar2" placeholder="例如：買樂高"></div>
+      <div class="setting-group"><label>🍬 10% 零用錢帳戶</label><input type="text" id="inputJar3" placeholder="例如：買糖果"></div>
+      <button class="btn-action" style="margin-top: 15px;" onclick="saveSettings()">💾 儲存出發</button>
+    </div>
+  </div>
+
+  <div id="logModal" class="modal-overlay hidden" style="z-index: 150;">
+    <div class="modal-content">
+      <h2 style="margin-bottom: 20px;">📜 <span class="child-name-display"></span> 的存摺</h2>
+      <div style="background: #fef3c7; padding: 15px; border-radius: 15px; margin-bottom: 15px; text-align: center; font-weight: 900; font-size: 1.5em; color:#d97706;">
+        總資產：<span id="modalTotal">0</span> 🪙
+      </div>
+      <div id="logList"></div>
+      <button class="btn-action" style="background:#ef4444; box-shadow:0 6px 0 #b91c1c; margin-top:20px;" onclick="closeLog()">關閉</button>
+    </div>
+  </div>
+
+  <script>
+    // 為了讓妳測試順利，換了一個新的本地記憶體密碼
+    let gameData = JSON.parse(localStorage.getItem('customIslandData_v4')) || {
+      childName: "", jar1Name: "金鵝", jar2Name: "夢想", jar3Name: "零用",
+      goose: 0, dream: 0, spending: 0, history: []
+    };
+    let currentReward = 0; let currentTaskName = "";
+    const mysteryTasks = [
+      { title: "澆花小幫手", reward: 30 }, { title: "排好書本", reward: 40 },
+      { title: "掃地機器人", reward: 70 }, { title: "倒垃圾", reward: 50 }
+    ];
+
+    window.onload = function() {
+      // 1. 如果沒名字，打開電影院
+      if (!gameData.childName) { 
+        document.getElementById('introModal').classList.remove('hidden'); 
+        let video = document.getElementById('introVideo');
+        
+        // 嘗試自動播放
+        video.play().catch(e => {
+          console.log("瀏覽器阻擋自動播放，需要樂樂親手點擊播放鍵！");
+        });
+
+        // 2. 影片播完時，自動跳轉去設定名字！
+        video.onended = function() {
+          finishIntro();
+        };
+      } 
+      else { 
+        // 已經有名字了，直接進入首頁
+        applySettingsToUI(); updateHUD(); 
+      }
+    };
+
+    function finishIntro() {
+      document.getElementById('introModal').classList.add('hidden');
+      document.getElementById('introVideo').pause();
+      // 跳轉設定
+      if (!gameData.childName) openSettings();
+    }
+
+    function replayIntro() {
+      document.getElementById('introModal').classList.remove('hidden');
+      document.getElementById('introVideo').currentTime = 0; 
+      document.getElementById('introVideo').play();
+    }
+
+    function updateHUD() {
+      let total = gameData.goose + gameData.dream + gameData.spending;
+      document.getElementById('hudTotalDisplay').innerText = total;
+    }
+
+    function openSettings() {
+      document.getElementById('settingsModal').classList.remove('hidden');
+      document.getElementById('inputChildName').value = gameData.childName;
+      document.getElementById('inputJar1').value = gameData.jar1Name;
+      document.getElementById('inputJar2').value = gameData.jar2Name;
+      document.getElementById('inputJar3').value = gameData.jar3Name;
+    }
+
+    function saveSettings() {
+      let newName = document.getElementById('inputChildName').value.trim();
+      if (!newName) { alert("請輸入名字喔！"); return; }
+      gameData.childName = newName;
+      gameData.jar1Name = document.getElementById('inputJar1').value.trim() || "金鵝";
+      gameData.jar2Name = document.getElementById('inputJar2').value.trim() || "夢想";
+      gameData.jar3Name = document.getElementById('inputJar3').value.trim() || "零用";
+      localStorage.setItem('customIslandData_v4', JSON.stringify(gameData));
+      document.getElementById('settingsModal').classList.add('hidden');
+      applySettingsToUI(); updateHUD();
+    }
+
+    function applySettingsToUI() {
+      document.querySelectorAll('.child-name-display').forEach(el => el.innerText = gameData.childName);
+      document.getElementById('jar1TitleDisplay').innerText = gameData.jar1Name + "(50%)";
+      document.getElementById('jar2TitleDisplay').innerText = gameData.jar2Name + "(40%)";
+      document.getElementById('jar3TitleDisplay').innerText = gameData.jar3Name + "(10%)";
+    }
+
+    function updateMap(stepNum) {
+      document.body.style.backgroundImage = `url('bg${stepNum}.jpg')`;
+      for(let i=1; i<=4; i++) document.getElementById(`nav${i}`).classList.remove('active');
+      document.getElementById(`nav${stepNum}`).classList.add('active');
+    }
+
+    function randomTask() {
+      let selectedTask = mysteryTasks[Math.floor(Math.random() * mysteryTasks.length)];
+      goToStep2(selectedTask.title, selectedTask.reward);
+    }
+
+    function goToStep2(title, reward) {
+      currentReward = reward; currentTaskName = title; 
+      document.getElementById('step1').classList.add('hidden');
+      document.getElementById('step2').classList.remove('hidden');
+      document.getElementById('taskNameDisplay').innerText = `「${title}」`;
+      resetUploadState(); updateMap(2);
+    }
+
+    function previewImage(event) {
+      const reader = new FileReader();
+      reader.onload = function() {
+        document.getElementById('imagePreview').src = reader.result;
+        document.getElementById('previewContainer').style.display = 'block';
+        document.getElementById('claimBtn').classList.remove('hidden');
+        document.getElementById('uploadBtn').innerText = "🔄 重拍";
+      }
+      if(event.target.files[0]) reader.readAsDataURL(event.target.files[0]);
+    }
+
+    function resetUploadState() {
+      document.getElementById('cameraInput').value = "";
+      document.getElementById('previewContainer').style.display = 'none';
+      document.getElementById('imagePreview').src = "";
+      document.getElementById('claimBtn').classList.add('hidden');
+      document.getElementById('uploadBtn').innerText = "📸 點我拍照掃描";
+    }
+
+    function goBack(currentStepId, previousStepId, bgNum) {
+      document.getElementById(currentStepId).classList.add('hidden');
+      document.getElementById(previousStepId).classList.remove('hidden');
+      updateMap(bgNum);
+    }
+
+    function goToStep3() {
+      document.getElementById('step2').classList.add('hidden');
+      document.getElementById('step3').classList.remove('hidden');
+      document.getElementById('rewardAmount').innerText = currentReward;
+      let audio = new Audio('https://actions.google.com/sounds/v1/foley/glass_clink.ogg');
+      audio.play().catch(e=>console.log("Audio muted"));
+      updateMap(3);
+    }
+
+    function goToStep4() {
+      document.getElementById('step3').classList.add('hidden');
+      document.getElementById('step4').classList.remove('hidden');
+      document.getElementById('gooseCoins').innerText = gameData.goose;
+      document.getElementById('dreamCoins').innerText = gameData.dream;
+      document.getElementById('spendingCoins').innerText = gameData.spending;
+      document.getElementById('allocateBtn').classList.remove('hidden');
+      document.getElementById('homeBtn').classList.add('hidden');
+      document.getElementById('allocateDialogue').innerText = "⚖️ 把能量存進專屬帳戶吧！";
+      updateMap(4);
+    }
+
+    function allocateCoins() {
+      document.getElementById('allocateBtn').classList.add('hidden');
+      document.getElementById('homeBtn').classList.remove('hidden');
+      document.getElementById('allocateDialogue').innerText = "🎉 存入成功！";
+      
+      let gooseShare = Math.floor(currentReward * 0.5);
+      let dreamShare = Math.floor(currentReward * 0.4);
+      let spendingShare = currentReward - gooseShare - dreamShare;
+      
+      gameData.goose += gooseShare; gameData.dream += dreamShare; gameData.spending += spendingShare;
+      let time = new Date().toLocaleTimeString('zh-TW', {hour: '2-digit', minute:'2-digit'});
+      gameData.history.unshift({ date: time, task: currentTaskName, reward: currentReward });
+      localStorage.setItem('customIslandData_v4', JSON.stringify(gameData));
+      
+      document.getElementById('gooseCoins').innerText = gameData.goose;
+      document.getElementById('dreamCoins').innerText = gameData.dream;
+      document.getElementById('spendingCoins').innerText = gameData.spending;
+      updateHUD();
+      let audio = new Audio('https://actions.google.com/sounds/v1/foley/cash_register.ogg');
+      audio.play().catch(e=>console.log("Audio muted"));
+    }
+
+    function returnToHome() {
+      document.getElementById('step4').classList.add('hidden');
+      document.getElementById('step1').classList.remove('hidden');
+      updateMap(1);
+    }
+
+    function openLog() {
+      document.getElementById('logModal').classList.remove('hidden');
+      document.getElementById('modalTotal').innerText = gameData.goose + gameData.dream + gameData.spending;
+      let logList = document.getElementById('logList');
+      logList.innerHTML = ""; 
+      if(gameData.history.length === 0) {
+        logList.innerHTML = "<p style='text-align:center;'>還沒有紀錄喔！</p>"; return;
+      }
+      gameData.history.forEach(item => {
+        let logItem = document.createElement('div');
+        logItem.className = "log-item";
+        logItem.innerHTML = `<div><span style="color:#666; font-size:0.8em;">${item.date}</span><br><span class="log-task">${item.task}</span></div><div class="log-reward">+${item.reward}</div>`;
+        logList.appendChild(logItem);
+      });
+    }
+
+    function closeLog() { document.getElementById('logModal').classList.add('hidden'); }
+  </script>
+
+</body>
+</html>
